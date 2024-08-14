@@ -1,6 +1,6 @@
 import os
-import psycopg2
-from psycopg2 import sql
+import psycopg
+# from psycopg2 import sql
 
 
 # Singleton class to connect to PostgreSQL DB
@@ -24,10 +24,10 @@ class PostgresConnector:
 
     def connect(self):
         try:
-            self.connection = psycopg2.connect(
+            self.connection = psycopg.connect(
                 host=self.host,
                 port=self.port,
-                database=self.database,
+                dbname=self.database,
                 user=self.user,
                 password=self.password
             )
