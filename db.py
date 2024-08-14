@@ -1,7 +1,8 @@
 import os
 import psycopg
-# from psycopg2 import sql
+from dotenv import load_dotenv
 
+# from psycopg2 import sql
 
 # Singleton class to connect to PostgreSQL DB
 class PostgresConnector:
@@ -14,6 +15,7 @@ class PostgresConnector:
 
     def __init__(self):
         if not hasattr(self, 'initialized'):  # Ensure __init__ is run only once
+            load_dotenv()
             self.host = os.getenv('DB_HOST')
             self.port = os.getenv('DB_PORT')
             self.database = os.getenv('DB_NAME')

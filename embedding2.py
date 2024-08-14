@@ -250,7 +250,7 @@ class VectorEmbeddingCreator2:
         # chain = create_retrieval_chain(results, doc_chain)
         # response = chain.invoke(user_input)
         # print(response)
-        return result
+        return response["answer"]
 
     def sample_json(self):
         """Sample JSON data for testing."""
