@@ -50,7 +50,7 @@ class VectorEmbeddingCreator:
                 SELECT id, cve_json 
                 FROM cve.CVE_RECORDS 
                 WHERE embedding IS NULL 
-                AND date_updated <= CURRENT_DATE - INTERVAL '2 weeks' LIMIT 1
+                AND date_published >= current_date - interval '1 month'
             """
             cursor.execute(select_query)
             records = cursor.fetchall()
@@ -60,6 +60,23 @@ class VectorEmbeddingCreator:
                 self.update_embedding(record_id, embedding)
         except Exception as e:
             print(f"Error processing records: {e}")
+        finally:
+            cursor.close()
+    def load_embeddings(self):
+        cursor = self.db_connector.connection.cursor()
+        try:
+            select_query = """
+                SELECT id, embedding 
+                FROM cve.CVE_RECORDS 
+                WHERE embedding IS NOT NULL
+            """
+            cursor.execute(select_query)
+            records = cursor.fetchall()
+            embeddings = {record[0]: np.array(record[1]) for record in records}
+            return embeddings
+        except Exception as e:
+            print(f"Error loading embeddings: {e}")
+            return {}
         finally:
             cursor.close()
 
