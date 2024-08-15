@@ -2,8 +2,6 @@ import os
 import psycopg
 from dotenv import load_dotenv
 
-# from psycopg2 import sql
-
 # Singleton class to connect to PostgreSQL DB
 class PostgresConnector:
     _instance = None
