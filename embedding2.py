@@ -1,11 +1,10 @@
 import os
-import psycopg2
 import json
 import numpy as np
-import torch
-from psycopg import sql
-from transformers import AutoTokenizer, AutoModel
-
+# import torch
+# from psycopg import sql
+# from transformers import AutoTokenizer, AutoModel
+import logging
 from db import PostgresConnector
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
@@ -16,7 +15,8 @@ from langchain.chains import create_retrieval_chain
 import warnings
 from langchain.docstore.document import Document
 from openai import OpenAI
-import openai
+from logger_config import logger
+# import openai
 
 warnings.filterwarnings("ignore")
 
@@ -26,13 +26,14 @@ class VectorEmbeddingCreator2:
         # Connect to the PostgreSQL database
         self.db_connector = PostgresConnector()
         self.db_connector.connect()
-        connection_string = f"postgresql+psycopg://{self.db_connector.user}:{self.db_connector.password}@{self.db_connector.host}:{self.db_connector.port}/{self.db_connector.database}"
+        connection_string = f"postgresql+psycopg://{self.db_connector.user}:{self.db_connector.password}@{self.db_connector.host}:5432/{self.db_connector.database}"
+        logger.info(f"Connection string: {connection_string}")
         # connection_string = "postgresql+psycopg://cve_user:password1234@localhost:5432/cve"
         print(connection_string)
         # Initialize LangChain's HuggingFaceEmbeddings wrapper
         self.embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
         try:
+            logger.info("Connecting to PostgreSQL DB")
             self.vectorstore = PGVector(
                 connection=connection_string,
                 embeddings=self.embedding_model,
@@ -40,6 +41,7 @@ class VectorEmbeddingCreator2:
                 use_jsonb=True,
             )
         except Exception as e:
+            logger.error(f"Error initializing PGVector: {e}")
             print(f"Error initializing PGVector: {e}")
         print("Connection to PostgreSQL DB successful")
 
@@ -119,37 +121,6 @@ class VectorEmbeddingCreator2:
         finally:
             cursor.close()
 
-    def generate_doc_chain(self, cve_json_list, user_input):
-        """Generate a response for the user based on the list of CVE JSON data."""
-        # Load the LLM
-        llm = ChatOpenAI(model_name="gpt-3.5-turbo")
-
-        # Convert JSON objects to Document objects
-        documents = [Document(page_content=json.dumps(cve_json), metadata={}) for cve_json in cve_json_list]
-
-        # Define the template with placeholders
-        template = """
-        You are an assistant for question-answering tasks.
-        Use the provided context only to answer the following question:
-
-        <context>
-        {context}
-        </context>
-
-        Question: {user_input}
-        """
-
-        # Create the prompt template
-        prompt = ChatPromptTemplate.from_template(template)
-
-        # Generate the doc_chain
-        doc_chain = create_stuff_documents_chain(llm, prompt)
-
-        # Invoke the chain with the list of Document objects and user input
-        response = doc_chain.invoke({"context": documents, "user_input": user_input})
-
-        return response
-
     def search_embeddings(self, user_input, top_k=5):
         """Search the database for embeddings similar to the user's input."""
         # user_embedding = self.create_user_embedding(user_input).tolist()
@@ -171,8 +142,7 @@ class VectorEmbeddingCreator2:
             print(f"Error fetching CVE records: {e}")
         finally:
             cursor.close()
-
-        print(cve_json_list[0])
+        logger.info(f"Found the following CVE JSON data: {cve_json_list}")
 
         # system_prompt = (
         #     "You are an assistant for question-answering tasks. "
@@ -186,8 +156,6 @@ class VectorEmbeddingCreator2:
         #     "\n\n"
         #     "{context}"
         # )
-
-        temp = json.dumps(self.sample_json())
 
         system_prompt = (
             "You are an assistant for question-answering tasks. "
@@ -250,7 +218,7 @@ class VectorEmbeddingCreator2:
         # chain = create_retrieval_chain(results, doc_chain)
         # response = chain.invoke(user_input)
         # print(response)
-        return result
+        return response["answer"]
 
     def sample_json(self):
         """Sample JSON data for testing."""
