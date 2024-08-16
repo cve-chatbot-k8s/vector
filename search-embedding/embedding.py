@@ -109,7 +109,7 @@ class VectorEmbeddingCreator:
         #     "{context}"
         # )
 
-        temp = json.dumps(self.sample_json())
+        # temp = json.dumps(self.sample_json())
 
         system_prompt = (
             "You are an assistant for question-answering tasks. "
