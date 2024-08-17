@@ -1,0 +1,80 @@
+
+
+# .dockerignore
+
+# Ignore node_modules and npm debug log
+node_modules
+npm-debug.log
+
+# Ignore logs
+logs
+*.log
+*.log.*
+
+# Ignore temp and cache files
+tmp
+*.tmp
+*.temp
+*.cache
+.cache/
+.pyo
+.pyc
+*.swp
+
+# Ignore compiled python files
+__pycache__/
+
+# Ignore system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore test and coverage files
+coverage/
+*.cover
+*.test
+*.spec
+
+# Ignore build directories
+build/
+dist/
+*.o
+*.a
+*.out
+
+
+# Ignore configuration files
+*.env
+.env.local
+.env.*.local
+.envrc
+.envrc.*
+
+# Go specific files and directories
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+vendor/
+
+
+
+# Ignore temporary files created by editors
+*.swp
+*.swo
+*~
+
+
+# Ignore executable binaries
+main
