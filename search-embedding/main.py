@@ -1,15 +1,7 @@
-from transformers import AutoTokenizer
 from embedding import VectorEmbeddingCreator
 import streamlit as st
 from streamlit_chat import message 
 from logger_config import logger
-
-
-# def query_llm(model, query):
-#     tokenizer = AutoTokenizer.from_pretrained("gpt2")
-#     inputs = tokenizer.encode(query, return_tensors="pt")
-#     outputs = model.generate(inputs, max_length=50, num_return_sequences=1)
-#     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 # Streamlit Chat Application
 if __name__ == '__main__':
@@ -38,7 +30,7 @@ if __name__ == '__main__':
 
         # Generate a response
         if result:
-            st.session_state.responses.append(f"Result found: {result}")
+            st.session_state.responses.append(f"{result}")
         else:
             st.session_state.responses.append("Sorry, I couldn't find any relevant CVE information.")
 
