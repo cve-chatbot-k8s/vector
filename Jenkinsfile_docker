@@ -1,0 +1,74 @@
+pipeline {
+    agent any
+      tools {
+        nodejs "node"
+      }
+    environment {
+        DOCKER_VS_IMAGE_NAME = 'girish332/cve-vectore-store'
+        DOCKER_CB_IMAGE_NAME = 'girish332/cve-chatbot'
+        LATEST_TAG = 'latest'
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                cleanWs()
+                checkout scm
+            }
+        }
+
+        stage ('Release with Semantic Versioning') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-app', passwordVariable: 'GITHUB_TOKEN', usernameVariable: 'GITHUB_USERNAME')]) {
+                    sh '''
+                        npm install @semantic-release/commit-analyzer
+                        npm install @semantic-release/release-notes-generator
+                        npm install @semantic-release/changelog
+                        npm install semantic-release-helm
+                        npm install @semantic-release/git
+                        npm install @semantic-release/github
+                        export GITHUB_ACTION=true
+                        npx semantic-release
+                    '''
+                }
+            }
+        }
+
+        stage('Build and Push Vector-Store Docker Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'dockerhub-creds') {
+                        sh '''
+                            docker buildx ls
+                            docker buildx create --name cve-vector-store
+                            docker buildx use cve-vector-store
+                            VERSION=$(git describe --tags)
+                            docker buildx build --push --platform linux/amd64,linux/arm64 --tag $DOCKER_VS_IMAGE_NAME:$VERSION --tag $DOCKER_VS_IMAGE_NAME:latest store-embedding/
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build and Push flyway Docker Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'dockerhub-creds') {
+                        sh '''
+                            docker buildx ls
+                            docker buildx create --name cve-chatbot
+                            docker buildx use cve-chatbot
+                            VERSION=$(git describe --tags)
+                            docker buildx build --push --platform linux/amd64,linux/arm64 -f Dockerfile.flyway --tag $DOCKER_CB_IMAGE_NAME:$VERSION --tag $DOCKER_CB_IMAGE_NAME:latest search-embedding/
+                        '''
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+            echo 'Pipeline complete'
+        }
+    }
+}
